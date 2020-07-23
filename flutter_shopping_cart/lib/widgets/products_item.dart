@@ -7,6 +7,7 @@ class ProductsItem extends StatelessWidget {
   final String title;
   final String imageUrl;
 
+  static const routeName = '/productDetail';
   const ProductsItem({Key key, this.id, this.title, this.imageUrl})
       : super(key: key);
   @override
@@ -16,10 +17,8 @@ class ProductsItem extends StatelessWidget {
       child: GridTile(
         child: GestureDetector(
           onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (ctx) => ProductDetailScreem(
-                      title: title,
-                    )));
+            Navigator.of(context)
+                .pushNamed(ProductDetailScreen.routeName, arguments: id);
           },
           child: Image.network(
             imageUrl,
