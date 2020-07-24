@@ -6,10 +6,10 @@ class ProductDetailScreen extends StatelessWidget {
   static const routeName = '/product-detail';
   @override
   Widget build(BuildContext context) {
-    ProductsProvider productsProvider = Provider.of<ProductsProvider>(context);
+    ProductsProvider productsProvider =
+        Provider.of<ProductsProvider>(context, listen: false);
     String productId = ModalRoute.of(context).settings.arguments as String;
-    final loadedProduct =
-        productsProvider.items.firstWhere((product) => product.id == productId);
+    final loadedProduct = productsProvider.findById(productId);
 
     return Scaffold(
       appBar: AppBar(

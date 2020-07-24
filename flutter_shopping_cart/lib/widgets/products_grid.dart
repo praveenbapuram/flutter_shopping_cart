@@ -17,10 +17,13 @@ class ProductsGrid extends StatelessWidget {
         mainAxisSpacing: 10, // vertical spacing between the grid items.
       ),
       itemBuilder: (ctx, index) {
-        return ProductsItem(
-          id: products[index].id,
-          title: products[index].title,
-          imageUrl: products[index].imageUrl,
+        return ChangeNotifierProvider(
+          create: (ct) => products[index],
+          child: ProductsItem(
+              /*  id: products[index].id,
+            title: products[index].title,
+            imageUrl: products[index].imageUrl, */
+              ),
         );
       },
       itemCount: products.length,

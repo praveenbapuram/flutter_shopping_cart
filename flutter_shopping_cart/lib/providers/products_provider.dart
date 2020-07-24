@@ -1,7 +1,8 @@
 import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_shopping_cart/models/product.dart';
+import 'package:flutter_shopping_cart/providers/product.dart';
+import 'package:flutter_shopping_cart/providers/product.dart';
 
 class ProductsProvider with ChangeNotifier {
   List<Product> loadProducts = [
@@ -41,11 +42,15 @@ class ProductsProvider with ChangeNotifier {
   List<Product> _items = [];
 
   List<Product> get items {
-    return [..._items];
+    return [...loadProducts];
   }
 
   void addProduct(Product product) {
     _items.add(product);
     notifyListeners();
+  }
+
+  Product findById(String productId) {
+    return _items.firstWhere((product) => product.id == productId);
   }
 }
