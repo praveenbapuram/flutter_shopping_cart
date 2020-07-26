@@ -4,10 +4,15 @@ import 'package:flutter_shopping_cart/widgets/products_item.dart';
 import 'package:provider/provider.dart';
 
 class ProductsGrid extends StatelessWidget {
+  final bool showOnlyFavourite;
+  ProductsGrid(this.showOnlyFavourite);
+
   @override
   Widget build(BuildContext context) {
     final productsProvider = Provider.of<ProductsProvider>(context);
-    final products = productsProvider.items;
+    final products = showOnlyFavourite
+        ? productsProvider.getFavouriteProducts
+        : productsProvider.items;
     return GridView.builder(
       padding: const EdgeInsets.all(10),
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -17,8 +22,9 @@ class ProductsGrid extends StatelessWidget {
         mainAxisSpacing: 10, // vertical spacing between the grid items.
       ),
       itemBuilder: (ctx, index) {
-        return ChangeNotifierProvider(
-          create: (ct) => products[index],
+        return ChangeNotifierProvider.value(
+          //create: (ct) => products[index],
+          value: products[index],
           child: ProductsItem(
               /*  id: products[index].id,
             title: products[index].title,
