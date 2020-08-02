@@ -62,6 +62,10 @@ class ProductsProvider with ChangeNotifier {
     return _items.where((product) => product.isFavourite).toList();
   }
 
+  int get itemCount {
+    return _items.length;
+  }
+
   /*  void showFavouritesOnly() {
     showFavoritesOnly = true;
     notifyListeners();
