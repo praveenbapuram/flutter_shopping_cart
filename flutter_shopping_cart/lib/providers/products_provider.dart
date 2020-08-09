@@ -50,7 +50,22 @@ class ProductsProvider with ChangeNotifier {
   }
 
   void addProduct(Product product) {
-    _items.add(product);
+    final newProduct = Product(
+        id: DateTime.now().toString(),
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        imageUrl: product.imageUrl);
+    _items.add(newProduct);
+    notifyListeners();
+  }
+
+  void updateProduct(String edittedProductId, Product product) {
+    final index =
+        _items.indexWhere((element) => element.id == edittedProductId);
+    if (index > 0) {
+      _items[index] = product;
+    }
     notifyListeners();
   }
 
@@ -64,6 +79,11 @@ class ProductsProvider with ChangeNotifier {
 
   int get itemCount {
     return _items.length;
+  }
+
+  void deleteProduct(String productId) {
+    _items.removeWhere((element) => element.id == productId);
+    notifyListeners();
   }
 
   /*  void showFavouritesOnly() {
