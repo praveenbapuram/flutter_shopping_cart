@@ -1,11 +1,20 @@
+import 'dart:ffi';
+
 import 'package:flutter/cupertino.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_shopping_cart/models/http_exception.dart';
 import 'package:flutter_shopping_cart/providers/product.dart';
-import 'package:flutter_shopping_cart/providers/product.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:http/http.dart';
 
 class ProductsProvider with ChangeNotifier {
-  List<Product> _items = [
+  final String token;
+
+  ProductsProvider(this.token, this._items);
+  /* List<Product> _items = [
     Product(
       id: 'p1',
       title: 'Red Shirt',
@@ -38,7 +47,7 @@ class ProductsProvider with ChangeNotifier {
       imageUrl:
           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
     ),
-  ];
+  ];*/
 
   /* var showFavoritesOnly = false; */
   List<Product> get items {
@@ -49,22 +58,77 @@ class ProductsProvider with ChangeNotifier {
     /* } */
   }
 
-  void addProduct(Product product) {
-    final newProduct = Product(
-        id: DateTime.now().toString(),
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        imageUrl: product.imageUrl);
-    _items.add(newProduct);
-    notifyListeners();
+  List<Product> _items = [];
+
+  Future<Void> addProduct(Product product) async {
+    const String url =
+        'https://flutter-update-95299.firebaseio.com/products.json';
+    try {
+      final response = await http.post(url,
+          body: json.encode({
+            'title': product.title,
+            'price': product.price.toString(),
+            'description': product.description,
+            'imageUrl': product.imageUrl,
+            'isFavourite': product.isFavourite,
+          }));
+      final newProduct = Product(
+          id: json.decode(response.body)['name'],
+          title: product.title,
+          description: product.description,
+          price: product.price,
+          imageUrl: product.imageUrl);
+      _items.add(newProduct);
+      notifyListeners();
+    } catch (error) {
+      print(error);
+      throw error;
+    }
   }
 
-  void updateProduct(String edittedProductId, Product product) {
+  Future<Void> fetchAndSetProducts() async {
+    var url =
+        'https://flutter-update-95299.firebaseio.com/products.json?auth=${token}';
+
+    try {
+      final response = await http.get(url);
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      List<Product> loadedProducts = [];
+      extractedData.forEach((prodId, prodData) {
+        loadedProducts.add(Product(
+          id: prodId,
+          title: prodData['title'],
+          description: prodData['description'],
+          price: double.parse(prodData['price']),
+          imageUrl: prodData['imageUrl'],
+          isFavourite: prodData['isFavourite'],
+        ));
+      });
+
+      _items = loadedProducts;
+      notifyListeners();
+    } catch (error) {
+      print(error);
+      throw error;
+    }
+  }
+
+  Future<Void> updateProduct(
+      String edittedProductId, Product newProduct) async {
     final index =
         _items.indexWhere((element) => element.id == edittedProductId);
     if (index > 0) {
-      _items[index] = product;
+      final url =
+          'https://flutter-update-95299.firebaseio.com/products/${edittedProductId}.json';
+      await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'price': newProduct.price.toString(),
+            'description': newProduct.description,
+            'imageUrl': newProduct.imageUrl
+          }));
+
+      _items[index] = newProduct;
     }
     notifyListeners();
   }
@@ -81,9 +145,24 @@ class ProductsProvider with ChangeNotifier {
     return _items.length;
   }
 
-  void deleteProduct(String productId) {
-    _items.removeWhere((element) => element.id == productId);
+  void deleteProduct(String edittedProductId) async {
+    final url =
+        'https://flutter-update-95299.firebaseio.com/products/${edittedProductId}.json';
+
+    final existingIndex =
+        _items.indexWhere((element) => element.id == edittedProductId);
+    var existingProd = _items[existingIndex];
+
+    _items.removeAt(existingIndex);
     notifyListeners();
+    final response = await http.delete(url);
+
+    if (response.statusCode > 400) {
+      _items.insert(existingIndex, existingProd);
+      notifyListeners();
+      throw HttpsException('could not delete product');
+    }
+    existingProd = null;
   }
 
   /*  void showFavouritesOnly() {

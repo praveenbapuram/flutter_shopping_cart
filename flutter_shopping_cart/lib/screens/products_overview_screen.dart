@@ -13,11 +13,40 @@ enum FilterOptions {
 }
 
 class ProductsOverviewScreen extends StatefulWidget {
+  static const routeName = '/products-overview-screen';
   @override
   _ProductsOverviewScreenState createState() => _ProductsOverviewScreenState();
 }
 
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
+  var _isInit = true;
+  var _isLoading = true;
+  @override
+  void initState() {
+    // TODO: implement initState
+    //Provider.of<ProductsProvider>(context).fetchAndSetProducts();
+    /* Future.delayed(Duration.zero).then((value)  {
+          Provider.of<ProductsProvider>(context).fetchAndSetProducts();
+        });*/
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    if (_isInit) {
+      Provider.of<ProductsProvider>(context)
+          .fetchAndSetProducts()
+          .then((value) {
+        setState(() {
+          _isLoading = false;
+        });
+      });
+    }
+    _isInit = false;
+    super.didChangeDependencies();
+  }
+
   var showOnlyFavourite = false;
   @override
   Widget build(BuildContext context) {
@@ -66,7 +95,11 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
         ],
       ),
       drawer: AppDrawer(),
-      body: ProductsGrid(showOnlyFavourite),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : ProductsGrid(showOnlyFavourite),
     );
   }
 }

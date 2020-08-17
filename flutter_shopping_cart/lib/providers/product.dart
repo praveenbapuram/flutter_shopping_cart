@@ -1,4 +1,6 @@
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class Product with ChangeNotifier {
   final String id;
@@ -16,8 +18,28 @@ class Product with ChangeNotifier {
       @required this.imageUrl,
       this.isFavourite = false});
 
-  void toggleFavouriteState() {
+  void _setFavouriteValue(bool value) {
+    isFavourite = value;
+    notifyListeners();
+  }
+
+  void toggleFavouriteState() async {
+    final oldStatus = isFavourite;
     isFavourite = !isFavourite;
     notifyListeners();
+    final url = 'https://flutter-update-95299.firebaseio.com/products/${id}';
+    try {
+      final response = await http.patch(url,
+          body: json.encode(
+            {
+              'isFavourite': isFavourite,
+            },
+          ));
+      if (response.statusCode > 400) {
+        _setFavouriteValue(oldStatus);
+      }
+    } catch (error) {
+      _setFavouriteValue(oldStatus);
+    }
   }
 }
