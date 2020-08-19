@@ -12,8 +12,9 @@ import 'package:http/http.dart';
 
 class ProductsProvider with ChangeNotifier {
   final String token;
+  final String userId;
 
-  ProductsProvider(this.token, this._items);
+  ProductsProvider(this.token, this._items, this.userId);
   /* List<Product> _items = [
     Product(
       id: 'p1',
@@ -61,17 +62,19 @@ class ProductsProvider with ChangeNotifier {
   List<Product> _items = [];
 
   Future<Void> addProduct(Product product) async {
-    const String url =
-        'https://flutter-update-95299.firebaseio.com/products.json';
+    String url =
+        'https://flutter-update-95299.firebaseio.com/products.json?auth=$token';
     try {
-      final response = await http.post(url,
-          body: json.encode({
-            'title': product.title,
-            'price': product.price.toString(),
-            'description': product.description,
-            'imageUrl': product.imageUrl,
-            'isFavourite': product.isFavourite,
-          }));
+      final response = await http.post(
+        url,
+        body: json.encode({
+          'title': product.title,
+          'price': product.price.toString(),
+          'description': product.description,
+          'imageUrl': product.imageUrl,
+          'createrId': userId,
+        }),
+      );
       final newProduct = Product(
           id: json.decode(response.body)['name'],
           title: product.title,
@@ -86,13 +89,20 @@ class ProductsProvider with ChangeNotifier {
     }
   }
 
-  Future<Void> fetchAndSetProducts() async {
+  Future<Void> fetchAndSetProducts([bool filterByUser = false]) async {
+    var filterByQuery =
+        filterByUser ? 'orderBy="createrId"&equalTo="$userId"' : '';
     var url =
-        'https://flutter-update-95299.firebaseio.com/products.json?auth=${token}';
+        'https://flutter-update-95299.firebaseio.com/products.json?auth=${token}&${filterByQuery}';
 
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
+      final favUrl =
+          'https://flutter-update-95299.firebaseio.com/userFavourites/$userId/.json?auth=$token';
+
+      final favResponse = await http.get(favUrl);
+      final favData = json.decode(favResponse.body);
       List<Product> loadedProducts = [];
       extractedData.forEach((prodId, prodData) {
         loadedProducts.add(Product(
@@ -101,7 +111,9 @@ class ProductsProvider with ChangeNotifier {
           description: prodData['description'],
           price: double.parse(prodData['price']),
           imageUrl: prodData['imageUrl'],
-          isFavourite: prodData['isFavourite'],
+          isFavourite: favData == null
+              ? false
+              : (favData[prodId] == null) ? false : favData[prodId],
         ));
       });
 
@@ -119,7 +131,7 @@ class ProductsProvider with ChangeNotifier {
         _items.indexWhere((element) => element.id == edittedProductId);
     if (index > 0) {
       final url =
-          'https://flutter-update-95299.firebaseio.com/products/${edittedProductId}.json';
+          'https://flutter-update-95299.firebaseio.com/products/${edittedProductId}.json?auth=$token';
       await http.patch(url,
           body: json.encode({
             'title': newProduct.title,
@@ -147,7 +159,7 @@ class ProductsProvider with ChangeNotifier {
 
   void deleteProduct(String edittedProductId) async {
     final url =
-        'https://flutter-update-95299.firebaseio.com/products/${edittedProductId}.json';
+        'https://flutter-update-95299.firebaseio.com/products/${edittedProductId}.json?auth=$token';
 
     final existingIndex =
         _items.indexWhere((element) => element.id == edittedProductId);

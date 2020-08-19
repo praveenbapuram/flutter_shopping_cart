@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_shopping_cart/providers/auth.dart';
 import 'package:flutter_shopping_cart/screens/orders_screen.dart';
 import 'package:flutter_shopping_cart/screens/user_products_screen.dart';
+import 'package:provider/provider.dart';
 
 class AppDrawer extends StatefulWidget {
   @override
@@ -39,6 +41,15 @@ class _AppDrawerState extends State<AppDrawer> {
             onTap: () {
               Navigator.of(context)
                   .pushReplacementNamed(UserProductsScreen.routeName);
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.exit_to_app),
+            title: Text('Logout'),
+            onTap: () {
+              Navigator.of(context).pop();
+              Provider.of<Auth>(context, listen: false).logout();
+              Navigator.of(context).pushReplacementNamed('/');
             },
           )
         ],
